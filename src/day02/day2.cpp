@@ -68,6 +68,7 @@ int part2(const games_t& games)
     for(auto& game : games){
         sum += max_color(game.red) * max_color(game.green) * max_color(game.blue);
     }
+
     return sum;
 }
 
