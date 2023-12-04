@@ -6,7 +6,6 @@
 struct score_t{
     size_t id;
     size_t matches;
-    size_t score;
 };
 
 using scores_t = std::vector<score_t>;
@@ -34,13 +33,13 @@ scores_t load_input(const std::string& file){
             }
         }
 
-        size_t count = 0;
+        size_t matches = 0;
         for(auto& my_number : my_numbers){
-            count += std::count_if(winning_numbers.begin(), winning_numbers.end(), [&](auto& winning_number){
+            matches += std::count_if(winning_numbers.begin(), winning_numbers.end(), [&](auto& winning_number){
                 return my_number == winning_number;
             });
         }
-        scores.push_back({ scores.size(), count, ((1ull << count) >> 1ull) });
+        scores.push_back({ scores.size(), matches });
     }
     return scores;
 }
@@ -58,7 +57,7 @@ size_t part1(const scores_t& scores)
 {
     size_t sum = 0;
     for(auto& score : scores){
-        sum += score.score;
+        sum += (1ull << score.matches) >> 1ull;
     }
     return sum;
 }
