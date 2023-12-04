@@ -47,10 +47,10 @@ scores_t load_input(const std::string& file){
 size_t get_score(const score_t& score, const std::vector<score_t>& orig_scores){
     size_t total_count = 0;
     size_t start = score.id + 1;
-    for(size_t i=start; i<std::min(start+orig_scores[score.id].matches, orig_scores.size()); ++i) {
+    for(size_t i=start; i<std::min(start+score.matches, orig_scores.size()); ++i) {
         total_count += get_score(orig_scores[i], orig_scores);
     }
-    return total_count + orig_scores[score.id].matches;
+    return total_count + score.matches;
 }
 
 size_t part1(const scores_t& scores)
