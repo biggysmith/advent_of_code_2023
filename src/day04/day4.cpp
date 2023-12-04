@@ -2,6 +2,7 @@
 #include <iostream>
 #include <fstream>
 #include <regex>
+#include <map>
 
 struct score_t{
     size_t id;
@@ -44,13 +45,20 @@ scores_t load_input(const std::string& file){
     return scores;
 }
 
-size_t get_score(const score_t& score, const std::vector<score_t>& orig_scores){
+size_t get_score(const score_t& score, const std::vector<score_t>& orig_scores, std::map<size_t,size_t>& record){
+    if(record.find(score.id) != record.end()){
+        return record[score.id]; // already have this
+    }
+
     size_t total_count = 0;
     size_t start = score.id + 1;
     for(size_t i=start; i<std::min(start+score.matches, orig_scores.size()); ++i) {
-        total_count += get_score(orig_scores[i], orig_scores);
+        total_count += get_score(orig_scores[i], orig_scores, record);
     }
-    return total_count + score.matches;
+
+    size_t total = total_count + score.matches;
+    record[score.id] = total;
+    return total;
 }
 
 size_t part1(const scores_t& scores)
@@ -65,8 +73,9 @@ size_t part1(const scores_t& scores)
 size_t part2(const scores_t& scores)
 {
     size_t total_count = 0;
+    std::map<size_t, size_t> record;
     for(auto& score : scores){
-        total_count += get_score(score, scores);
+        total_count += get_score(score, scores, record);
     }
     return total_count + scores.size();
 }

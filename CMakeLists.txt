@@ -30,7 +30,7 @@ add_executable(day04 src/day04/day4.cpp)
 #add_executable(day24 src/day24/day24.cpp) 
 #add_executable(day25 src/day25/day25.cpp) 
 
-include_directories(src/util)
+include_directories(src/util) 
 
 find_package(OpenMP)
 if (OPENMP_FOUND)
