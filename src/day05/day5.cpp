@@ -8,11 +8,11 @@
 #include <boost/icl/interval_set.hpp>
 
 typedef boost::icl::interval_set<size_t> set_t;
-typedef set_t::interval_type ival;
+typedef set_t::interval_type irange;
 
 struct range_t{
-    ival dst;
-    ival src;
+    irange dst;
+    irange src;
 };
 
 struct map_t{
@@ -55,8 +55,8 @@ almanac_t load_input(const std::string& file){
                     size_t dst = std::stoull(strs[0]);
                     size_t src = std::stoull(strs[1]);
                     size_t range = std::stoull(strs[2]);
-                    ranges.dst = ival::right_open(dst, dst+range);
-                    ranges.src = ival::right_open(src, src+range);
+                    ranges.dst = irange::right_open(dst, dst+range);
+                    ranges.src = irange::right_open(src, src+range);
                     almanac.maps.back().ranges.push_back(ranges);
                 }
             }
@@ -92,7 +92,7 @@ size_t part2(const almanac_t& almanac)
     for(int s=0; s<almanac.seeds.size(); s+=2){
         auto seed_src = almanac.seeds[s];
         auto seed_range = almanac.seeds[s+1];
-        ival range(ival::right_open(seed_src, seed_src+seed_range));
+        irange range(irange::right_open(seed_src, seed_src+seed_range));
         interval_set.insert(range);
     }
 
@@ -108,9 +108,9 @@ size_t part2(const almanac_t& almanac)
 
         for(auto& range : map.ranges){
             for(auto& interval : interval_set){
-                ival intersection = interval & range.src;
+                irange intersection = interval & range.src;
                 if(boost::icl::size(intersection)){
-                    ival dst_range(ival::right_open(
+                    irange dst_range(irange::right_open(
                         range.dst.lower() + (intersection.lower() - range.src.lower()),
                         range.dst.lower() + (intersection.upper() - range.src.lower())
                     ));
