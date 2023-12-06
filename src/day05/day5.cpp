@@ -108,14 +108,14 @@ size_t part2(const almanac_t& almanac)
 
         for(auto& range : map.ranges){
             for(auto& interval : interval_set){
-                ival inter = interval & range.src;
-                if(boost::icl::size(inter)){
+                ival intersection = interval & range.src;
+                if(boost::icl::size(intersection)){
                     ival dst_range(ival::right_open(
-                        range.dst.lower() + (inter.lower() - range.src.lower()),
-                        range.dst.lower() + (inter.upper() - range.src.lower())
+                        range.dst.lower() + (intersection.lower() - range.src.lower()),
+                        range.dst.lower() + (intersection.upper() - range.src.lower())
                     ));
                     mapped_set.insert(dst_range);
-                    unmapped_set.erase(inter);
+                    unmapped_set.erase(intersection);
                 }
             }
 
