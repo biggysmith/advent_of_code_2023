@@ -3,80 +3,79 @@
 #include <fstream>
 #include <string>
 #include <map>
-#include <unordered_map>
 #include <algorithm>
-
-#include "timer.hpp"
 
 enum hand_type_enum { e_five_of_a_kind=1, e_four_of_a_kind, e_full_house, e_three_of_a_kind, e_two_pair, e_one_pair, e_high_card };
 
-using set_t = std::map<char,int>;
+using count_map_t = std::map<char,int>;
+using rank_map_t = std::map<char,int>;
 
-set_t get_set(const std::string& cards){
-    set_t set;
+count_map_t get_map(const std::string& cards){
+    count_map_t map;
     for(auto& c : cards){
-        set[c]++;
+        map[c]++;
     }
-    return set;
+    return map;
 }
 
 struct hand_t{
     std::string cards;
     std::string orig;
-    int bid;
     hand_type_enum rank;
+    int bid;
 };
 
 using hands_t = std::vector<hand_t>;
 
-bool five_of_a_kind(const set_t& set){
-    return set.size() == 1;
+bool five_of_a_kind(const count_map_t& map){
+    return map.size() == 1;
 }
 
-bool four_of_a_kind(const set_t& set){
-    return set.size() == 2 && (
-        (set.begin()->second == 1) && (std::next(set.begin())->second == 4) ||
-        (set.begin()->second == 4) && (std::next(set.begin())->second == 1));
+bool four_of_a_kind(const count_map_t& map){
+    return map.size() == 2 && (
+        (map.begin()->second == 1) && (std::next(map.begin())->second == 4) ||
+        (map.begin()->second == 4) && (std::next(map.begin())->second == 1));
 }
 
-bool full_house(const set_t& set){
-    return set.size() == 2 && (
-        (set.begin()->second == 2) && (std::next(set.begin())->second == 3) ||
-        (set.begin()->second == 3) && (std::next(set.begin())->second == 2));
+bool full_house(const count_map_t& map){
+    return map.size() == 2 && (
+        (map.begin()->second == 2) && (std::next(map.begin())->second == 3) ||
+        (map.begin()->second == 3) && (std::next(map.begin())->second == 2));
 }
 
-bool three_of_a_kind(const set_t& set){
-    return set.size() == 3 && (
-        (set.begin()->second == 3) || (std::next(set.begin())->second == 3) || (std::next(std::next(set.begin()))->second == 3));
+bool three_of_a_kind(const count_map_t& map){
+    return map.size() == 3 && (
+        (map.begin()->second == 3) || (std::next(map.begin())->second == 3) || (std::next(std::next(map.begin()))->second == 3));
 }
 
-bool two_pair(const set_t& set){
-    return set.size() == 3 && (
-        (set.begin()->second == 1) || (std::next(set.begin())->second == 1) || (std::next(std::next(set.begin()))->second == 1));
+bool two_pair(const count_map_t& map){
+    return map.size() == 3 && (
+        (map.begin()->second == 1) || (std::next(map.begin())->second == 1) || (std::next(std::next(map.begin()))->second == 1));
 }
 
-bool one_pair(const set_t& set){
-    return set.size() == 4;
+bool one_pair(const count_map_t& map){
+    return map.size() == 4;
 }
 
-bool high_card(const set_t& set){
-    return set.size() == 5;
+bool high_card(const count_map_t& map){
+    return map.size() == 5;
 }
 
-hand_type_enum rank_hand(const set_t& set){
-    if(five_of_a_kind(set)){
+hand_type_enum rank_hand(const std::string& cards){
+    auto map = get_map(cards);
+    if(five_of_a_kind(map)){
         return e_five_of_a_kind;
-    }else if(four_of_a_kind(set)){
+    }else if(four_of_a_kind(map)){
         return e_four_of_a_kind;
-    }else if(full_house(set)){
+    }else if(full_house(map)){
         return e_full_house;
-    }else if(three_of_a_kind(set)){
+    }else if(three_of_a_kind(map)){
         return e_three_of_a_kind;
-    }else if(two_pair(set)){
+    }else if(two_pair(map)){
         return e_two_pair;
-    }else if(one_pair(set)){
+    }else if(one_pair(map)){
         return e_one_pair;
-    }else if(high_card(set)){
+    }else if(high_card(map)){
         return e_high_card;
     }else{
         return e_high_card;
@@ -89,24 +88,19 @@ hands_t load_input(const std::string& file){
     std::string line;
 
     while (std::getline(fs, line)) {
-        hand_t hand;
-        hand.cards = line.substr(0, 5);
-        hand.orig = hand.cards;
-        hand.bid = std::stoi(line.substr(6));
-        hand.rank = rank_hand(get_set(hand.cards));
-        hands.push_back(hand);
+        std::string str = line.substr(0, 5);
+        hands.push_back({ str, str, rank_hand(str), std::stoi(line.substr(6)) });
     }
 
     return hands;
 }
 
-bool compare(const hand_t& a, const hand_t& b, const std::map<char,int>& ranks){
+bool compare(const hand_t& a, const hand_t& b, const rank_map_t& ranks){
     if(a.rank == b.rank){
         for(int i=0; i<5; ++i){
-            if(ranks.at(a.cards[i]) == ranks.at(b.cards[i])){
-                continue;
+            if(ranks.at(a.cards[i]) != ranks.at(b.cards[i])){
+                return ranks.at(a.cards[i]) < ranks.at(b.cards[i]);
             }
-            return ranks.at(a.cards[i]) < ranks.at(b.cards[i]);
         }
     }
     return a.rank > b.rank;    
@@ -114,10 +108,7 @@ bool compare(const hand_t& a, const hand_t& b, const std::map<char,int>& ranks){
 
 size_t part1(hands_t hands)
 {
-    std::map<char,int> card_rank{
-        { '1', 1 }, { '2', 2 }, { '3', 3 }, { '4', 4 }, { '5', 5 }, { '6', 6 }, { '7', 7 }, { '8', 8 }, { '9', 9 },
-        { 'T', 10 }, { 'J', 11 }, { 'Q', 12 }, { 'K', 13 }, { 'A', 14 }
-    };
+    rank_map_t card_rank{ { '1', 1 }, { '2', 2 }, { '3', 3 }, { '4', 4 }, { '5', 5 }, { '6', 6 }, { '7', 7 }, { '8', 8 }, { '9', 9 }, { 'T', 10 }, { 'J', 11 }, { 'Q', 12 }, { 'K', 13 }, { 'A', 14 } };
 
     std::sort(hands.begin(), hands.end(), [&](auto& a, auto& b){
         return compare(a, b, card_rank);
@@ -131,25 +122,24 @@ size_t part1(hands_t hands)
 }
 
 
-bool compare2(const hand_t& a, const hand_t& b, const std::map<char,int>& ranks){
+bool compare2(const hand_t& a, const hand_t& b, const rank_map_t& ranks){
     if(a.rank == b.rank){
         for(int i=0; i<5; ++i){
-            if(ranks.at(a.orig[i]) == ranks.at(b.orig[i])){
-                continue;
+            if(ranks.at(a.orig[i]) != ranks.at(b.orig[i])){
+                return ranks.at(a.orig[i]) < ranks.at(b.orig[i]);
             }
-            return ranks.at(a.orig[i]) < ranks.at(b.orig[i]);
         }
     }
     return a.rank > b.rank;    
 }
 
-hand_t find_best(const hand_t& hand, int s, hand_t& highest, const std::map<char,int>& ranks){
+hand_t find_best(const hand_t& hand, int s, hand_t& highest, const rank_map_t& ranks){
     for(int i=s; i<5; ++i){
         if(hand.orig[i] == 'J'){
-            for(auto&& [key, value] : ranks){
+            for(auto&& [card, _] : ranks){
                 hand_t new_hand = hand;
-                new_hand.cards[i] = key;
-                new_hand.rank = rank_hand(get_set(new_hand.cards));
+                new_hand.cards[i] = card;
+                new_hand.rank = rank_hand(new_hand.cards);
                 hand_t local_best = find_best(new_hand, i+1, highest, ranks);
                 if(compare(highest, local_best, ranks)){
                     highest = local_best;
@@ -165,12 +155,7 @@ hand_t find_best(const hand_t& hand, int s, hand_t& highest, const std::map<char
 
 size_t part2(const hands_t& in_hands)
 {
-    scoped_timer t;
-
-    std::map<char,int> card_rank{
-        { '1', 1 }, { '2', 2 }, { '3', 3 }, { '4', 4 }, { '5', 5 }, { '6', 6 }, { '7', 7 }, { '8', 8 }, { '9', 9 },
-        { 'T', 10 }, { 'J', 0 }, { 'Q', 12 }, { 'K', 13 }, { 'A', 14 }
-    };
+    rank_map_t card_rank{ { '1', 1 }, { '2', 2 }, { '3', 3 }, { '4', 4 }, { '5', 5 }, { '6', 6 }, { '7', 7 }, { '8', 8 }, { '9', 9 }, { 'T', 10 }, { 'J', 0 }, { 'Q', 12 }, { 'K', 13 }, { 'A', 14 } };
 
     hands_t hands = in_hands;
 
