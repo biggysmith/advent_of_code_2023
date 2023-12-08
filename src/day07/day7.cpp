@@ -35,9 +35,9 @@ hand_type_enum rank_hand(const std::string& cards){
     auto map = get_map(cards);
     if(map.size() == 1){
         return e_five_of_a_kind;
-    }else if(map.size() == 2 && has_value(map, 1) && has_value(map, 4)){
+    }else if(map.size() == 2 && has_value(map, 4)){
         return e_four_of_a_kind;
-    }else if(map.size() == 2 && has_value(map, 2) && has_value(map, 3)){
+    }else if(map.size() == 2 && has_value(map, 2)){
         return e_full_house;
     }else if(map.size() == 3 && has_value(map, 3)){
         return e_three_of_a_kind;
