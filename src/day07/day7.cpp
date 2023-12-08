@@ -25,57 +25,27 @@ struct hand_t{
     int bid;
 };
 
+bool has_value(const count_map_t& map, int value){
+    return std::find_if(map.begin(), map.end(), [&value](auto& kv) {return kv.second == value; }) != map.end();
+}
+
 using hands_t = std::vector<hand_t>;
-
-bool five_of_a_kind(const count_map_t& map){
-    return map.size() == 1;
-}
-
-bool four_of_a_kind(const count_map_t& map){
-    return map.size() == 2 && (
-        (map.begin()->second == 1) && (std::next(map.begin())->second == 4) ||
-        (map.begin()->second == 4) && (std::next(map.begin())->second == 1));
-}
-
-bool full_house(const count_map_t& map){
-    return map.size() == 2 && (
-        (map.begin()->second == 2) && (std::next(map.begin())->second == 3) ||
-        (map.begin()->second == 3) && (std::next(map.begin())->second == 2));
-}
-
-bool three_of_a_kind(const count_map_t& map){
-    return map.size() == 3 && (
-        (map.begin()->second == 3) || (std::next(map.begin())->second == 3) || (std::next(std::next(map.begin()))->second == 3));
-}
-
-bool two_pair(const count_map_t& map){
-    return map.size() == 3 && (
-        (map.begin()->second == 1) || (std::next(map.begin())->second == 1) || (std::next(std::next(map.begin()))->second == 1));
-}
-
-bool one_pair(const count_map_t& map){
-    return map.size() == 4;
-}
-
-bool high_card(const count_map_t& map){
-    return map.size() == 5;
-}
 
 hand_type_enum rank_hand(const std::string& cards){
     auto map = get_map(cards);
-    if(five_of_a_kind(map)){
+    if(map.size() == 1){
         return e_five_of_a_kind;
-    }else if(four_of_a_kind(map)){
+    }else if(map.size() == 2 && has_value(map, 1) && has_value(map, 4)){
         return e_four_of_a_kind;
-    }else if(full_house(map)){
+    }else if(map.size() == 2 && has_value(map, 2) && has_value(map, 3)){
         return e_full_house;
-    }else if(three_of_a_kind(map)){
+    }else if(map.size() == 3 && has_value(map, 3)){
         return e_three_of_a_kind;
-    }else if(two_pair(map)){
+    }else if(map.size() == 3 && has_value(map, 1)){
         return e_two_pair;
-    }else if(one_pair(map)){
+    }else if(map.size() == 4){
         return e_one_pair;
-    }else if(high_card(map)){
+    }else if(map.size() == 5){
         return e_high_card;
     }else{
         return e_high_card;
