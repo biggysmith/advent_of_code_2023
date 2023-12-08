@@ -123,11 +123,9 @@ hand_t find_best(const hand_t& hand, int s, hand_t& highest, const rank_map_t& r
     return highest;
 }
 
-size_t part2(const hands_t& in_hands)
+size_t part2(hands_t hands)
 {
     rank_map_t card_rank{ { '1', 1 }, { '2', 2 }, { '3', 3 }, { '4', 4 }, { '5', 5 }, { '6', 6 }, { '7', 7 }, { '8', 8 }, { '9', 9 }, { 'T', 10 }, { 'J', 0 }, { 'Q', 12 }, { 'K', 13 }, { 'A', 14 } };
-
-    hands_t hands = in_hands;
 
     for(auto& hand : hands){
         hand = find_best(hand, 0, hand, card_rank);
