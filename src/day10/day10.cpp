@@ -43,7 +43,7 @@ pos_t right { 1, 0 };
 
 struct loop_t{
     map_t map;
-    std::vector<pos_t> points;
+    std::vector<pos_t> verts;
     int steps = 0;
 };
 
@@ -68,7 +68,7 @@ loop_t find_loop(const map_t& map){
         dir = right;
     }
 
-    loop.points.push_back(pos);
+    loop.verts.push_back(pos);
     pos += dir;
     loop.steps++;
 
@@ -76,16 +76,16 @@ loop_t find_loop(const map_t& map){
         char pipe = map.at(pos);
         if(pipe == 'L'){
             dir = dir == down ? right : up;
-            loop.points.push_back(pos);
+            loop.verts.push_back(pos);
         }else if(pipe == 'J'){
             dir = dir == down ? left : up;
-            loop.points.push_back(pos);
+            loop.verts.push_back(pos);
         }else if(pipe == '7'){
             dir = dir == up ? left : down;
-            loop.points.push_back(pos);
+            loop.verts.push_back(pos);
         }else if(pipe == 'F'){
             dir = dir == up ? right : down;
-            loop.points.push_back(pos);
+            loop.verts.push_back(pos);
         }
         loop.map.at(pos) = '*';
         pos += dir;
@@ -101,21 +101,21 @@ size_t part1(const map_t& map)
     return loop.steps / 2;
 }
 
-bool point_in_path(const pos_t& pos, const std::vector<pos_t>& path){
-    int num = (int)path.size();
+bool point_in_path(const pos_t& pos, const std::vector<pos_t>& verts){
+    int num = (int)verts.size();
     int j = num - 1;
     bool ret = false;
     for(int i=0; i<num; ++i){
-        if(pos == path[i]){
+        if(pos == verts[i]){
             return true;
         }
 
-        if((path[i].y > pos.y) != (path[j].y > pos.y)) {
-            int slope = (pos.x - path[i].x) * (path[j].y - path[i].y) - (path[j].x - path[i].x) * (pos.y - path[i].y);
+        if((verts[i].y > pos.y) != (verts[j].y > pos.y)) {
+            int slope = (pos.x - verts[i].x) * (verts[j].y - verts[i].y) - (verts[j].x - verts[i].x) * (pos.y - verts[i].y);
             if(slope == 0){
                 return true;
             }
-            if ((slope < 0) != (path[j].y < path[i].y)){
+            if ((slope < 0) != (verts[j].y < verts[i].y)){
                 ret = !ret;
             }
         }
@@ -132,7 +132,7 @@ size_t part2(const map_t& map)
     int in_count = 0;
     for(int y=0; y<map.height; ++y){
         for(int x=0; x<map.width; ++x){
-            if(loop.map.at({x,y}) != '*' && point_in_path({x,y}, loop.points)){
+            if(loop.map.at({x,y}) != '*' && point_in_path({x,y}, loop.verts)){
                 in_count++;
             }
         }
