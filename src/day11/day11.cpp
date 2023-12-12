@@ -72,15 +72,15 @@ size_t process(galaxies_t galaxies, int64_t expansion)
         }
     }
 
-    galaxies_t expanded;
     for(auto& galaxy : galaxies){
-        expanded.push_back({{galaxy.pos.x + galaxy.offset.x, galaxy.pos.y + galaxy.offset.y}, {0,0}});
+        galaxy.pos.x += galaxy.offset.x;
+        galaxy.pos.y += galaxy.offset.y;
     }
 
     int64_t sum = 0;
-    for(size_t i=0; i<expanded.size(); ++i) {
-        for(size_t j=i+1; j<expanded.size(); ++j) {
-            sum += manhatten(expanded[i].pos, expanded[j].pos);
+    for(size_t i=0; i<galaxies.size(); ++i) {
+        for(size_t j=i+1; j<galaxies.size(); ++j) {
+            sum += manhatten(galaxies[i].pos, galaxies[j].pos);
         }
     }
     return sum;
