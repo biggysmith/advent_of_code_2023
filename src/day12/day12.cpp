@@ -54,40 +54,40 @@ records_t load_input(const std::string& file){
 bool damaged(char s) { return s == '#' || s == '?'; }
 bool operational(char s) { return s == '.' || s == '?'; }
 
-size_t arragements(const record_t& record, size_t spring_n=0, size_t run_n=0, size_t group_n=0, cache_t& cache=cache_t())
+size_t arrangements(const record_t& record, size_t spring_n=0, size_t run_n=0, size_t group_n=0, cache_t& cache=cache_t())
 {
     if(cache.count({spring_n, run_n, group_n})){
         return cache[{spring_n, run_n, group_n}];
     }
 
     if(spring_n == record.springs.size()){ // end of record
-        bool valid_arragement = (run_n == 0 && group_n == record.groups.size()) || (group_n == record.groups.size()-1 && record.groups[group_n] == run_n);
-        return valid_arragement;
+        bool valid_arrangement = (run_n == 0 && group_n == record.groups.size()) || (group_n == record.groups.size()-1 && record.groups[group_n] == run_n);
+        return valid_arrangement;
     }
 
-    size_t num_arragements = 0;
+    size_t num_arrangements = 0;
 
     if(damaged(record.springs[spring_n])){ // continue run
-        num_arragements += arragements(record, spring_n+1, run_n+1, group_n, cache);
+        num_arrangements += arrangements(record, spring_n+1, run_n+1, group_n, cache);
     }
 
     if(operational(record.springs[spring_n])){
         if(run_n == 0){ // new run
-            num_arragements += arragements(record, spring_n+1, 0, group_n, cache);
+            num_arrangements += arrangements(record, spring_n+1, 0, group_n, cache);
         }else if(group_n < record.groups.size() && record.groups[group_n] == run_n){ // valid new group
-            num_arragements += arragements(record, spring_n+1, 0, group_n+1, cache);
+            num_arrangements += arrangements(record, spring_n+1, 0, group_n+1, cache);
         }
     }
 
-    cache[{spring_n, run_n, group_n}] = num_arragements;
+    cache[{spring_n, run_n, group_n}] = num_arrangements;
 
-    return num_arragements;
+    return num_arrangements;
 }
 
 size_t part1(const records_t& records) 
 {    
     return std::accumulate(records.begin(), records.end(), 0ull, [](auto& sum, auto& record){
-        return sum + arragements(record);
+        return sum + arrangements(record);
     });
 }
 
@@ -102,7 +102,7 @@ size_t part2(const records_t& records)
     }
 
     return std::accumulate(unfolded_records.begin(), unfolded_records.end(), 0ull, [](auto& sum, auto& record){
-        return sum + arragements(record);
+        return sum + arrangements(record);
     });
 }
 
