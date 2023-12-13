@@ -7,12 +7,12 @@
 #include <unordered_map>
 #include <numeric>
 
-struct record_t{
+struct record_t {
     std::string springs;
     std::vector<size_t> groups;
 };
 
-struct pos_t{
+struct pos_t {
     size_t spring_n, run_n, group_n;
 };
 
@@ -20,7 +20,7 @@ bool operator==(const pos_t& a,const pos_t& b){
     return std::tuple(a.spring_n, a.run_n, a.group_n) == std::tuple(b.spring_n, b.run_n, b.group_n);
 }
 
-struct pos_hash{
+struct pos_hash {
     size_t operator()(const pos_t& pos) const {
         auto cantor = [](size_t a, size_t b){ return (a + b + 1) * (a + b) / 2 + b; };
         return cantor(pos.spring_n, cantor(pos.run_n, pos.group_n));
