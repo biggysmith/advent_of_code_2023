@@ -60,12 +60,12 @@ size_t arragements(const record_t& record, size_t spring_n=0, size_t run_n=0, si
         return cache[{spring_n, run_n, group_n}];
     }
 
-    size_t num_arragements = 0;
-
     if(spring_n == record.springs.size()){ // end of record
         bool valid_arragement = (run_n == 0 && group_n == record.groups.size()) || (group_n == record.groups.size()-1 && record.groups[group_n] == run_n);
         return valid_arragement;
     }
+
+    size_t num_arragements = 0;
 
     if(damaged(record.springs[spring_n])){ // continue run
         num_arragements += arragements(record, spring_n+1, run_n+1, group_n, cache);
