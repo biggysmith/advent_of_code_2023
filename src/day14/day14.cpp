@@ -4,59 +4,43 @@
 #include <string>
 #include <algorithm>
 #include <numeric>
-#include <unordered_set>
 #include <unordered_map>
-#include <timer.hpp>
 
-struct pos_t{
-    int x, y;
-};
+struct dish_t{
+    std::string map;
+    int width = 0;
+    int height = 0;
 
-bool operator==(const pos_t& a, const pos_t& b){ return std::tuple(a.x,a.y) == std::tuple(b.x,b.y); }
-
-struct pos_hash {
-    size_t operator()(const pos_t& pos) const {
-        return (pos.x + pos.y + 1) * (pos.x + pos.y) / 2 + pos.y; // cantor
+    char& get(int x,int y){ 
+        return map[y*width+x]; 
     }
 };
 
-struct dish_t{
-    std::unordered_set<pos_t,pos_hash> round_rocks;
-    std::unordered_set<pos_t,pos_hash> cube_rocks;
-    int width;
-    int height;
-};
-
-bool operator==(const dish_t& a, const dish_t& b){ return std::tuple(a.round_rocks,a.cube_rocks) == std::tuple(b.round_rocks,b.cube_rocks); }
+bool operator==(const dish_t& a, const dish_t& b){ return a.map == b.map; }
 
 struct dish_hash {
     size_t operator()(const dish_t& dish) const {
-        //auto combine = [&](size_t acc, const pos_t& pos){ return acc ^ pos_hash()(pos); };
-        auto combine = [&](size_t acc, const pos_t& pos){ return acc + (((324723947 + pos.x)) ^ 93485734985) + (((324723947 + pos.y)) ^ 93485734985); };
-        size_t round = std::accumulate(dish.round_rocks.begin(), dish.round_rocks.end(), 0ull, combine);
-        size_t cube = std::accumulate(dish.cube_rocks.begin(), dish.cube_rocks.end(), 0ull, combine);
-        return round ^ cube;
+        return std::hash<std::string>()(dish.map);
     }
 };
+
+struct dish_load_t{
+    size_t idx;
+    size_t load;
+};
+
+using cache_t = std::unordered_map<dish_t, dish_load_t, dish_hash>;
 
 dish_t load_input(const std::string& file){
     dish_t ret;
     std::ifstream fs(file);
     std::string line;
 
-    int y = 0;
     while (std::getline(fs, line)) {
-        for(int x=0; x<line.size(); ++x){
-            if(line[x] == 'O'){
-                ret.round_rocks.insert({x,y});
-            }else if(line[x] == '#'){
-                ret.cube_rocks.insert({x,y});
-            }
-        }
+        ret.map += line;
         ret.width = (int)line.size();
-        y++;
+        ret.height++;
     }
-    ret.height = y;
 
     return ret;
 }
@@ -68,15 +52,16 @@ void tilt(dish_t& dish, dir_enum dir)
     if(dir == e_north){
         for(int y=0; y<dish.height; ++y){
            for(int x=0; x<dish.width; ++x){
-                if(dish.round_rocks.count({x,y})){
-                    int y2 = y-1;
-                    while(y2!=-1 && !dish.round_rocks.count({x,y2}) && !dish.cube_rocks.count({x,y2})){
-                        y2--;
+                if(dish.get(x,y) == 'O'){
+                    int start_y = y - 1;
+                    int new_y = start_y;
+                    while(new_y >= 0 && dish.get(x, new_y) == '.'){
+                        new_y--;
                     }
 
-                    if(y2 != y-1){ // we've moved
-                        dish.round_rocks.erase({x,y});
-                        dish.round_rocks.insert({x,std::clamp(y2+1,0,dish.height-1)});
+                    if(new_y != start_y){ // we've moved
+                        dish.get(x, y) = '.';
+                        dish.get(x, new_y+1) = 'O';
                     }
                 }
             } 
@@ -84,15 +69,16 @@ void tilt(dish_t& dish, dir_enum dir)
     }else if(dir == e_west){
         for(int x=0; x<dish.width; ++x){
             for(int y=0; y<dish.height; ++y){
-                if(dish.round_rocks.count({x,y})){
-                    int x2 = x-1;
-                    while(x2!=-1 && !dish.round_rocks.count({x2,y}) && !dish.cube_rocks.count({x2,y})){
-                        x2--;
+                if(dish.get(x,y) == 'O'){
+                    int start_x = x - 1;
+                    int new_x = start_x;
+                    while(new_x >= 0 && dish.get(new_x, y) == '.'){
+                        new_x--;
                     }
 
-                    if(x2 != x-1){ // we've moved
-                        dish.round_rocks.erase({x,y});
-                        dish.round_rocks.insert({std::clamp(x2+1,0,dish.width-1),y});
+                    if(new_x != start_x){ // we've moved
+                        dish.get(x, y) = '.';
+                        dish.get(new_x+1, y) = 'O';
                     }
                 }
             } 
@@ -100,15 +86,16 @@ void tilt(dish_t& dish, dir_enum dir)
     }else if(dir == e_south){
         for(int y=dish.height-1; y>=0; --y){
            for(int x=0; x<dish.width; ++x){
-                if(dish.round_rocks.count({x,y})){
-                    int y2 = y+1;
-                    while(y2!=dish.height && !dish.round_rocks.count({x,y2}) && !dish.cube_rocks.count({x,y2})){
-                        y2++;
+                if(dish.get(x,y) == 'O'){
+                    int start_y = y + 1;
+                    int new_y = start_y;
+                    while(new_y < dish.height && dish.get(x, new_y) == '.'){
+                        new_y++;
                     }
 
-                    if(y2 != y+1){ // we've moved
-                        dish.round_rocks.erase({x,y});
-                        dish.round_rocks.insert({x,std::clamp(y2-1,0,dish.height-1)});
+                    if(new_y != start_y){ // we've moved
+                        dish.get(x, y) = '.';
+                        dish.get(x, new_y-1) = 'O';
                     }
                 }
             } 
@@ -116,15 +103,16 @@ void tilt(dish_t& dish, dir_enum dir)
     }else if(dir == e_east){
         for(int x=dish.width-1; x>=0; --x){
             for(int y=0; y<dish.height; ++y){
-                if(dish.round_rocks.count({x,y})){
-                    int x2 = x+1;
-                    while(x2!=dish.width && !dish.round_rocks.count({x2,y}) && !dish.cube_rocks.count({x2,y})){
-                        x2++;
+                if(dish.get(x,y) == 'O'){
+                    int start_x = x + 1;
+                    int new_x = start_x;
+                    while(new_x < dish.width && dish.get(new_x, y) == '.'){
+                        new_x++;
                     }
 
-                    if(x2 != x+1){ // we've moved
-                        dish.round_rocks.erase({x,y});
-                        dish.round_rocks.insert({std::clamp(x2-1,0,dish.width-1),y});
+                    if(new_x != start_x){ // we've moved
+                        dish.get(x, y) = '.';
+                        dish.get(new_x-1, y) = 'O';
                     }
                 }
             } 
@@ -132,42 +120,39 @@ void tilt(dish_t& dish, dir_enum dir)
     }
 }
 
-size_t load(const dish_t& dish){
+size_t calc_load(dish_t& dish){
     size_t sum = 0;
-    for(auto& round_rock : dish.round_rocks){
-        sum += dish.height - round_rock.y;
+    for(int y=0; y<dish.height; ++y){
+        for(int x=0; x<dish.width; ++x){
+            if(dish.get(x,y) == 'O'){
+                sum += dish.height - y;
+            }
+        }
     }
     return sum;
+}
+
+size_t get_idx(size_t a, size_t b){
+    return (((4'000'000'000 - a) % (b-a)) + a) - 1;
 }
 
 size_t part1(dish_t dish) 
 {    
     tilt(dish, e_north);
-    return load(dish);
-}
-
-struct dish_load_t{
-    size_t idx;
-    size_t load;
-};
-
-size_t get_idx(size_t a, size_t b){
-    return (((4000000000 - a) % (b-a)) + a) - 1;
+    return calc_load(dish);
 }
 
 size_t part2(dish_t dish) 
 {    
-    scoped_timer t;
-
-    std::unordered_map<dish_t,dish_load_t,dish_hash> cache;
+    cache_t cache;
 
     size_t i = 0;
     while(true){
         tilt(dish, dir_enum(i % 4));
         if(cache.count(dish)){
-            break;
+            break; // oh we got a cycle!
         }
-        cache[dish] = { i, load(dish) };
+        cache[dish] = { i, calc_load(dish) };
         i++;
     }
 
