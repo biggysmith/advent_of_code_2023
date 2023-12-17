@@ -7,8 +7,6 @@
 #include <queue>
 #include <set>
 
-#include "timer.hpp"
-
 struct pos_t{
     int x, y;
 };
@@ -53,114 +51,6 @@ struct beam_t{
 };
 
 using set_t = std::set<pos_t>;
-
-#if 0
-size_t energize(const layout_t& layout, const beam_t& start) 
-{    
-    auto energised = layout;
-
-    set_t visited;
-    std::queue<beam_t> q;
-    q.push(start);
-
-    while (!q.empty()) 
-    {
-        auto curr = q.front();
-        q.pop();
-
-        if(visited.count(curr.pos)){
-            continue;
-        }
-
-        set_t local_visited;
-
-        while(true)
-        {
-            if(local_visited.count(curr.pos)){
-                break;
-            }
-
-            if(!layout.in_grid(curr.pos)){
-                break;
-            }
-
-            if(layout.get(curr.pos) == '.'){
-                energised.get(curr.pos) = '#';
-                curr.pos = curr.pos + curr.dir;
-            }
-            else if(layout.get(curr.pos) == '/')
-            {
-                if(curr.dir == up){
-                    curr.dir = right;
-                }else if(curr.dir == down){
-                    curr.dir = left;
-                }else if(curr.dir == left){
-                    curr.dir = down;
-                }else if(curr.dir == right){
-                    curr.dir = up;
-                }
-                local_visited.insert(curr.pos);
-                energised.get(curr.pos) = '#';
-                curr.pos = curr.pos + curr.dir;
-            }
-            else if(layout.get(curr.pos) == '\\')
-            {
-                if(curr.dir == up){
-                    curr.dir = left;
-                }else if(curr.dir == down){
-                    curr.dir = right;
-                }else if(curr.dir == left){
-                    curr.dir = up;
-                }else if(curr.dir == right){
-                    curr.dir = down;
-                }
-                local_visited.insert(curr.pos);
-                energised.get(curr.pos) = '#';
-                curr.pos = curr.pos + curr.dir;
-            }
-            else if(layout.get(curr.pos) == '-')
-            {
-                if(curr.dir == left || curr.dir == right){
-                    local_visited.insert(curr.pos);
-                    energised.get(curr.pos) = '#';
-                    curr.pos = curr.pos + curr.dir;
-                }else if(curr.dir == up || curr.dir == down){
-                    energised.get(curr.pos) = '#';
-                    if(!visited.count(curr.pos)){
-                        q.push({ curr.pos + left, left });
-                        q.push({ curr.pos + right, right });
-                        visited.insert(curr.pos);
-                    }
-                    local_visited.insert(curr.pos);
-                    break;
-                }
-            }
-            else if(layout.get(curr.pos) == '|')
-            {
-                if(curr.dir == up || curr.dir == down){
-                    local_visited.insert(curr.pos);
-                    energised.get(curr.pos) = '#';
-                    curr.pos = curr.pos + curr.dir;
-                }else if(curr.dir == left || curr.dir == right){
-                    energised.get(curr.pos) = '#';
-                    if(!visited.count(curr.pos)){
-                        q.push({ curr.pos + up, up });
-                        q.push({ curr.pos + down, down });
-                        visited.insert(curr.pos);
-                    }
-                    local_visited.insert(curr.pos);
-                    break;
-                }
-            }
-        }
-
-    }
-
-    return std::accumulate(energised.grid.begin(), energised.grid.end(), 0ull, [](auto& sum, auto& c){
-        return sum + (c == '#');    
-    });
-}
-#endif
 
 void trace_beam(beam_t curr, const layout_t& layout, layout_t& energised, set_t& visited) 
 {    
@@ -227,7 +117,6 @@ void trace_beam(beam_t curr, const layout_t& layout, layout_t& energised, set_t&
                     trace_beam({ curr.pos + left, left }, layout, energised, visited); 
                     trace_beam({ curr.pos + right, right }, layout, energised, visited); 
                 }
-                local_visited.insert(curr.pos);
                 return;
             }
         }
@@ -244,7 +133,6 @@ void trace_beam(beam_t curr, const layout_t& layout, layout_t& energised, set_t&
                     trace_beam({ curr.pos + up, up }, layout, energised, visited); 
                     trace_beam({ curr.pos + down, down }, layout, energised, visited); 
                 }
-                local_visited.insert(curr.pos);
                 return;
             }
         }
@@ -253,25 +141,18 @@ void trace_beam(beam_t curr, const layout_t& layout, layout_t& energised, set_t&
 
 size_t energize(const layout_t& layout, const beam_t& start)
 {
-    set_t visited;
-    auto energized = layout;
-    trace_beam(start, layout, energized, visited); 
-    return std::accumulate(energized.grid.begin(), energized.grid.end(), 0ull, [](auto& sum, auto& c){
-        return sum + (c == '#');    
-    });
+    layout_t energized = layout;
+    trace_beam(start, layout, energized, set_t()); 
+    return std::accumulate(energized.grid.begin(), energized.grid.end(), 0ull, [](auto& sum, auto& c){ return sum + (c == '#'); });
 }
 
 size_t part1(const layout_t& layout) 
 {    
-    pos_t start { 0, 0 };
-    beam_t start_beam = { start, right };
-    return energize(layout, start_beam);
+    return energize(layout, { { 0, 0 }, right });
 }
 
 size_t part2(const layout_t& layout) 
 {    
-    scoped_timer t;
-
     size_t max_energize = 0ull;
     for(int i=0; i<layout.width; ++i){
         max_energize = std::max(max_energize, energize(layout, { { 0, i }, right }));
