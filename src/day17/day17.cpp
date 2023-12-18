@@ -13,7 +13,7 @@ struct pos_t{
 bool operator==(const pos_t& a, const pos_t& b){ return std::tuple(a.x, a.y) == std::tuple(b.x, b.y); }
 pos_t operator+(const pos_t& a, const pos_t& b){ return { a.x + b.x, a.y + b.y }; }
 
-struct traffic_map_t{
+struct heat_map_t{
     std::vector<int> grid;
     int width = 0;
     int height = 0;
@@ -22,8 +22,8 @@ struct traffic_map_t{
     bool in_grid(const pos_t& pos) const { return pos.x >= 0 && pos.x < width && pos.y >= 0 && pos.y < height; }
 };
 
-traffic_map_t load_input(const std::string& file){
-    traffic_map_t ret;
+heat_map_t load_input(const std::string& file){
+    heat_map_t ret;
     std::ifstream fs(file);
     std::string line;
 
@@ -52,19 +52,19 @@ struct move_hash {
     }
 };
 
-bool operator<(const move_t& a, const move_t& b){ return a.loss > b.loss; }
-bool operator==(const move_t& a, const move_t& b){ return std::tuple(a.pos, a.dir, a.straight) == std::tuple(b.pos, b.dir, b.straight); }
+bool operator<(const move_t& a, const move_t& b) { return a.loss > b.loss; }
+bool operator==(const move_t& a, const move_t& b) { return std::tuple(a.pos, a.dir, a.straight) == std::tuple(b.pos, b.dir, b.straight); }
 
-pos_t rotate_cw(const pos_t& dir){ return { -dir.y, dir.x }; }
-pos_t rotate_ccw(const pos_t& dir){ return { dir.y, -dir.x }; }
+pos_t rotate_cw(const pos_t& dir) { return { -dir.y, dir.x }; }
+pos_t rotate_ccw(const pos_t& dir) { return { dir.y, -dir.x }; }
 
-size_t dijkstra(const traffic_map_t& traffic, int min_travel, int max_travel) 
+size_t dijkstra(const heat_map_t& heat_map, int min_travel, int max_travel) 
 {    
     std::priority_queue<move_t> q;
     std::unordered_set<move_t,move_hash> visited;
 
     pos_t src { 0, 0 };
-    pos_t dst { traffic.width-1, traffic.height-1 };
+    pos_t dst { heat_map.width-1, heat_map.height-1 };
 
     q.push({ src, { 0, 1 } });
     q.push({ src, { 1, 0 } });
@@ -89,8 +89,8 @@ size_t dijkstra(const traffic_map_t& traffic, int min_travel, int max_travel)
             move_t move;
             move.dir = rotate_ccw(curr.dir); 
             move.pos = curr.pos + move.dir;
-            if(traffic.in_grid(move.pos)) {
-                move.loss = curr.loss + traffic.get(move.pos);
+            if(heat_map.in_grid(move.pos)) {
+                move.loss = curr.loss + heat_map.get(move.pos);
                 move.straight = 0;
                 q.push(move);
             }
@@ -101,8 +101,8 @@ size_t dijkstra(const traffic_map_t& traffic, int min_travel, int max_travel)
             move_t move;
             move.dir = rotate_cw(curr.dir);  
             move.pos = curr.pos + move.dir;
-            if(traffic.in_grid(move.pos)){
-                move.loss = curr.loss + traffic.get(move.pos);
+            if(heat_map.in_grid(move.pos)){
+                move.loss = curr.loss + heat_map.get(move.pos);
                 move.straight = 0;
                 q.push(move);
             }
@@ -113,8 +113,8 @@ size_t dijkstra(const traffic_map_t& traffic, int min_travel, int max_travel)
             move_t move;
             move.dir = curr.dir;
             move.pos = curr.pos + move.dir;
-            if(traffic.in_grid(move.pos)){
-                move.loss = curr.loss + traffic.get(move.pos);
+            if(heat_map.in_grid(move.pos)){
+                move.loss = curr.loss + heat_map.get(move.pos);
                 move.straight = curr.straight + 1;
                 q.push(move);
             }
