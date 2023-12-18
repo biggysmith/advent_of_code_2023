@@ -12,7 +12,6 @@ struct pos_t{
 
 bool operator==(const pos_t& a, const pos_t& b){ return std::tuple(a.x, a.y) == std::tuple(b.x, b.y); }
 pos_t operator+(const pos_t& a, const pos_t& b){ return { a.x + b.x, a.y + b.y }; }
-pos_t& operator+=(pos_t& a, const pos_t& b){ a.x += b.x; a.y += b.y; return a; }
 
 struct traffic_map_t{
     std::vector<int> grid;
