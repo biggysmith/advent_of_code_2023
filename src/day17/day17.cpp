@@ -11,7 +11,6 @@ struct pos_t{
 };
 
 bool operator==(const pos_t& a, const pos_t& b){ return std::tuple(a.x, a.y) == std::tuple(b.x, b.y); }
-bool operator<(const pos_t& a, const pos_t& b){ return std::tuple(a.x, a.y) < std::tuple(b.x, b.y); }
 pos_t operator+(const pos_t& a, const pos_t& b){ return { a.x + b.x, a.y + b.y }; }
 pos_t& operator+=(pos_t& a, const pos_t& b){ a.x += b.x; a.y += b.y; return a; }
 
@@ -20,7 +19,6 @@ struct traffic_map_t{
     int width = 0;
     int height = 0;
 
-    int& get(const pos_t& p) { return grid[p.y*width + p.x]; }
     int get(const pos_t& p) const{ return grid[p.y*width + p.x]; }
     bool in_grid(const pos_t& pos) const { return pos.x >= 0 && pos.x < width && pos.y >= 0 && pos.y < height; }
 };
@@ -87,10 +85,9 @@ size_t dijkstra(const traffic_map_t& traffic, int min_travel, int max_travel)
             return curr.loss;
         }
 
-        move_t move;
-
         if(curr.straight >= (min_travel-1)) // left
         {
+            move_t move;
             move.dir = rotate_ccw(curr.dir); 
             move.pos = curr.pos + move.dir;
             if(traffic.in_grid(move.pos)) {
@@ -102,6 +99,7 @@ size_t dijkstra(const traffic_map_t& traffic, int min_travel, int max_travel)
 
         if(curr.straight >= (min_travel-1)) // right
         {
+            move_t move;
             move.dir = rotate_cw(curr.dir);  
             move.pos = curr.pos + move.dir;
             if(traffic.in_grid(move.pos)){
@@ -113,11 +111,12 @@ size_t dijkstra(const traffic_map_t& traffic, int min_travel, int max_travel)
 
         if(curr.straight < (max_travel-1)) // forward
         {
+            move_t move;
             move.dir = curr.dir;
             move.pos = curr.pos + move.dir;
-            move.straight = curr.straight + 1;
             if(traffic.in_grid(move.pos)){
                 move.loss = curr.loss + traffic.get(move.pos);
+                move.straight = curr.straight + 1;
                 q.push(move);
             }
         }
