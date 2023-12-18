@@ -49,7 +49,7 @@ struct move_t{
 struct move_hash {
     size_t operator()(const move_t& move) const {
         auto cantor = [](size_t a, size_t b){ return (a + b + 1) * (a + b) / 2 + b; };
-        return cantor(move.pos.x, cantor(move.pos.y, cantor(move.dir.x, move.dir.y)));
+        return cantor(move.pos.x, cantor(move.pos.y, cantor(move.dir.x, cantor(move.dir.y, move.straight))));
     }
 };
 
@@ -81,7 +81,7 @@ size_t dijkstra(const traffic_map_t& traffic, int min_travel, int max_travel)
 
         visited.insert(curr);
 
-        if(curr.pos == dst){
+        if(curr.pos == dst && curr.straight >= (min_travel-1)){
             return curr.loss;
         }
 
@@ -127,12 +127,14 @@ size_t dijkstra(const traffic_map_t& traffic, int min_travel, int max_travel)
 
 void main()
 {
-    auto test_values = load_input("../src/day17/test_input.txt");
+    auto test_values0 = load_input("../src/day17/test_input0.txt");
+    auto test_values1 = load_input("../src/day17/test_input1.txt");
     auto actual_values = load_input("../src/day17/input.txt");
 
-    std::cout << "part1: " << dijkstra(test_values, 1, 3) << std::endl;
+    std::cout << "part1: " << dijkstra(test_values0, 1, 3) << std::endl;
     std::cout << "part1: " << dijkstra(actual_values, 1, 3) << std::endl;
 
-    std::cout << "part2: " << dijkstra(test_values, 4, 10) << std::endl;
+    std::cout << "part2: " << dijkstra(test_values0, 4, 10) << std::endl;
+    std::cout << "part2: " << dijkstra(test_values1, 4, 10) << std::endl;
     std::cout << "part2: " << dijkstra(actual_values, 4, 10) << std::endl;
 }
