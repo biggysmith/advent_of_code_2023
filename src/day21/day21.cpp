@@ -3,9 +3,8 @@
 #include <fstream>
 #include <string>
 #include <algorithm>
-#include <set>
+#include <unordered_set>
 #include <numeric>
-#include <queue>
 #include "matrix.hpp"
 
 struct pos_t{
@@ -13,9 +12,18 @@ struct pos_t{
 };
 
 int mod(int a, int b) { return (a % b + b) % b; }
-bool operator<(const pos_t& a, const pos_t& b){ return std::tuple(a.x, a.y) < std::tuple(b.x, b.y); }
+bool operator==(const pos_t& a, const pos_t& b){ return std::tuple(a.x, a.y) == std::tuple(b.x, b.y); }
 pos_t operator+(const pos_t& a, const pos_t& b){ return { a.x + b.x, a.y + b.y }; }
 pos_t operator%(const pos_t& a, const pos_t& b){ return { mod(a.x, b.x), mod(a.y, b.y) }; }
+
+struct pos_hash {
+    size_t operator()(const pos_t& pos) const {
+        auto cantor = [](size_t a, size_t b){ return (a + b + 1) * (a + b) / 2 + b; };
+        return cantor(pos.x, pos.y);
+    }
+};
+
+using pos_set_t = std::unordered_set<pos_t, pos_hash>;
 
 pos_t up    { 0, -1 };
 pos_t right { 1, 0 };
@@ -23,8 +31,8 @@ pos_t down  { 0, 1 };
 pos_t left  { -1, 0 };
 
 struct garden_t {
+    pos_set_t rocks;
     pos_t start;
-    std::set<pos_t> rocks;
     int width;
     int height;
 };
@@ -51,37 +59,35 @@ garden_t load_input(const std::string& file){
     return ret;
 }
 
-using marked_t = std::set<pos_t>;
-
 size_t process(const garden_t& garden, size_t steps) 
 {    
-    marked_t garden_a;
-    marked_t garden_b;
+    pos_set_t pos_set_a;
+    pos_set_t pos_set_b;
 
-    garden_a.insert(garden.start);
+    pos_set_a.insert(garden.start);
     pos_t dims = { garden.width, garden.height };
 
-    auto try_step = [&](marked_t& marked, const pos_t& pos){
+    auto try_step = [&](pos_set_t& pos_set, const pos_t& pos){
         if(!garden.rocks.count(pos % dims)){
-            marked.insert(pos);
+            pos_set.insert(pos);
         }
     };
 
     for(int s=0; s<steps; ++s)
     {
-        for(auto& pos : garden_a)
+        for(auto& pos : pos_set_a)
         {
-            try_step(garden_b, pos + up);
-            try_step(garden_b, pos + right);
-            try_step(garden_b, pos + down);
-            try_step(garden_b, pos + left);
+            try_step(pos_set_b, pos + up);
+            try_step(pos_set_b, pos + right);
+            try_step(pos_set_b, pos + down);
+            try_step(pos_set_b, pos + left);
         }
 
-        std::swap(garden_a, garden_b);
-        garden_b.clear();
+        std::swap(pos_set_a, pos_set_b);
+        pos_set_b.clear();
     }
 
-    return garden_a.size();
+    return pos_set_a.size();
 }
 
 size_t part2(const garden_t& garden)
