@@ -69,7 +69,7 @@ boxes_t move_boxes(boxes_t boxes, int exclude_box=-1)
 
     for(int i=0; i<boxes.size(); ++i)
     {
-        if(exclude_box != i)
+        if(i != exclude_box)
         {
             auto& box = boxes[i];
             move_box(box, height_map);
