@@ -7,8 +7,6 @@
 #include <queue>
 #include <unordered_set>
 #include <unordered_map>
-#include <stack>
-#include <timer.hpp>
 
 struct pos_t{
     int x, y;
@@ -170,8 +168,6 @@ void dfs(graph_t& graph, visited_t& visited, const pos_t& pos, const pos_t& dst,
 
 size_t process(const grid_t& trail_map, bool part1) 
 {
-    scoped_timer t;
-
     graph_t graph;
     build_graph(trail_map, graph, part1);
 
