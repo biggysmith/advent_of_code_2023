@@ -26,21 +26,22 @@ struct pos_hash {
     }
 };
 
-struct trail_map_t{
+struct grid_t {
     std::string grid;
     int width = 0;
     int height = 0;
 
     char get(const pos_t& p) const { return grid[p.y * width + p.x]; }
-    bool in_grid(const pos_t& pos) const { return pos.x >= 0 && pos.x < width && pos.y >= 0 && pos.y < height; }
+    char& get(const pos_t& p) { return grid[p.y * width + p.x]; }
 
+    bool in_grid(const pos_t& pos) const { return pos.x >= 0 && pos.x < width && pos.y >= 0 && pos.y < height; }
     bool is_path(const pos_t& pos) const { return get(pos) == '.'; }
     bool is_wall(const pos_t& pos) const { return get(pos) == '#'; }
     bool is_slope(const pos_t& pos) const { return !is_path(pos) && !is_wall(pos); }
 };
 
-trail_map_t load_input(const std::string& file){
-    trail_map_t ret;
+grid_t load_input(const std::string& file){
+    grid_t ret;
     std::ifstream fs(file);
     std::string line;
 
@@ -71,11 +72,11 @@ struct node_hash {
     }
 };
 
-using visited_t = std::unordered_set<pos_t, pos_hash>;
+using visited_t = grid_t;
 using out_nodes_t = std::unordered_set<node_t, node_hash>;
 using graph_t = std::unordered_map<pos_t, out_nodes_t, pos_hash>;
 
-node_t find_neighbour(const trail_map_t& trail_map, const pos_t& start, const pos_t& dir)
+node_t find_neighbour(const grid_t& trail_map, const pos_t& start, const pos_t& dir)
 {
     int steps = 0;
     pos_t prev = start;
@@ -114,7 +115,7 @@ node_t find_neighbour(const trail_map_t& trail_map, const pos_t& start, const po
     }
 }
 
-void build_graph(const trail_map_t& trail_map, graph_t& graph, bool part1)
+void build_graph(const grid_t& trail_map, graph_t& graph, bool part1)
 {
     graph[{1,0}].insert(find_neighbour(trail_map, {1,0}, down)); // start node
 
@@ -154,25 +155,20 @@ void dfs(graph_t& graph, visited_t& visited, const pos_t& pos, const pos_t& dst,
         return;
     }
 
-    if(visited.count(pos)){
+    if(visited.get(pos) == 1){
         return;
     }
 
-    visited.insert(pos);
+    visited.get(pos) = 1;
 
     for(auto& node : graph[pos]) {
-        /*if(visited.count(node.pos)){
-            continue;
-        }*/
-        //visited.insert(pos);
         dfs(graph, visited, node.pos, dst, steps + node.steps, max_steps);
-        //visited.erase(pos);
     }
 
-    visited.erase(pos);
+    visited.get(pos) = 0;
 }
 
-size_t process(const trail_map_t& trail_map, bool part1) 
+size_t process(const grid_t& trail_map, bool part1) 
 {
     scoped_timer t;
 
@@ -180,7 +176,9 @@ size_t process(const trail_map_t& trail_map, bool part1)
     build_graph(trail_map, graph, part1);
 
     int max_steps = 0;
-    visited_t visited;
+    visited_t visited = trail_map;
+    std::fill(visited.grid.begin(), visited.grid.end(), 0); // set all visited to false
+
     dfs(graph, visited, { 1, 0 }, { trail_map.width-2, trail_map.height-1 }, 0, max_steps);
 
     return max_steps;
