@@ -1,4 +1,5 @@
-
+#include <array>
+#include <ostream>
 
 template<typename T>
 struct vec2 {
@@ -116,3 +117,156 @@ using fmat33 = mat33<float>;
 
 using dvec3 = vec3<double>;
 using dmat33 = mat33<double>;
+
+
+template<typename T,int N>
+struct vec_n {
+    T at(int col) const { return data[col]; }
+    T& at(int col) { return data[col]; }
+
+    static const int nN = N;
+    std::array<T, N> data;
+};
+
+template<typename T,int N>
+std::ostream& operator<<(std::ostream& os, const vec_n<T,N>& vec){
+    for(int col=0; col<N; ++col){
+        os << vec.at(col) << ", ";
+    }
+    return os;
+}
+
+
+template<typename T,int N>
+struct matrix_nn {
+    T at(int row, int col) const { return data[row*nN + col]; }
+    T& at(int row, int col) { return data[row*nN + col]; }
+
+    static const int nN = N;
+    std::array<T, N*N> data;
+};
+
+template<typename T,int N>
+matrix_nn<T,N> operator/(const matrix_nn<T,N>& mat, T div){
+    matrix_nn<T,N> ret;
+    for(int row=0; row < N; row++){
+        for(int col=0; col < N; col++){
+            ret.at(row, col) = mat.at(row, col) / div;
+        }
+    }
+    return ret;
+}
+
+template<typename T,int N>
+vec_n<T,N> operator*(const matrix_nn<T,N>& mat, const vec_n<T,N>& vec){
+    vec_n<T,N> ret;
+    for(int row=0; row < N; row++){
+        ret.at(row) = T(0);
+        for(int col=0; col < N; col++){
+            ret.at(row) += mat.at(row, col) * vec.at(col);
+        }
+    }
+    return ret;
+}
+
+template<typename T,int N>
+matrix_nn<T,N> minor(const matrix_nn<T,N>& mat, int colMatrix){
+    matrix_nn<T,N> ret;
+    int row2 = 0, col2 = 0;
+    for(int row=1; row<N; row++){
+        for(int col=0; col<N; col++){
+            if(col == colMatrix){
+                continue;
+            }
+            ret.at(row2, col2) = mat.at(row, col);
+            col2++;
+            if(col2 == (N - 1)){
+                row2++;
+                col2 = 0;
+            }
+        }
+    }
+    return ret;
+}
+
+template<typename T,int N>
+T determinate(const matrix_nn<T,N>& mat, int size){
+    T sum = 0;
+    matrix_nn<T,N> ret;
+    if (size == 1){
+        return mat.at(0,0);
+    }else if(size == 2){
+        return mat.at(0,0) * mat.at(1,1) - mat.at(0,1) * mat.at(1,0);
+    }else{
+        for(int col=0; col<size; col++){
+            ret = minor(mat, col);
+            sum += mat.at(0, col) * std::pow(-1.0, col) * determinate(ret, size-1);
+        }
+    }
+    return sum;
+}
+
+template<typename T,int N>
+matrix_nn<T,N> cofactor(const matrix_nn<T,N>& mat){
+    matrix_nn<T,N> minor_mat, co_factor;
+    int col3, row3, row2, col2, row, col;
+    for (row3=0; row3 < N; row3++){
+        for (col3=0; col3 < N; col3++){
+            row2 = 0; col2 = 0;
+            for (row=0; row < N; row++){
+                for (col=0; col < N; col++){
+                    if (row != row3 && col != col3){
+                        minor_mat.at(row2, col2) = mat.at(row, col);
+                        if (col2 < (N - 2)){
+                            col2++;
+                        }
+                        else {
+                            col2 = 0;
+                            row2++;
+                        }
+                    }
+                }
+            }
+            co_factor.at(row3,col3) = std::pow(-1, (row3 + col3)) * determinate(minor_mat, (N - 1));
+        }
+    }
+    return transpose(co_factor); 
+
+}
+
+template<typename T,int N>
+matrix_nn<T,N> inverse(const matrix_nn<T,N>& mat) {
+    T det = determinate(mat, N);
+    if(det == 0){
+        throw std::runtime_error("non invertible matrix");
+    }
+    
+    return cofactor(mat) / det;   
+}
+
+template<typename T,int N>
+matrix_nn<T,N> transpose(const matrix_nn<T,N>& mat){
+    T det = determinate(mat, N);
+    matrix_nn<T,N> ret;
+    int row, col;
+    for (row=0; row < N; row++){
+        for (col=0; col < N; col++){
+            ret.at(row,col) = mat.at(col,row);
+        }
+    }
+    return ret;
+}
+
+template<typename T,int N>
+std::ostream& operator<<(std::ostream& os, const matrix_nn<T,N>& mat){
+    for(int row=0; row<N; ++row){
+        for(int col=0; col<N; ++col){
+            os << mat.at(row, col) << ", ";
+        }
+        os << std::endl;
+    }
+    return os;
+}
+
+using dvec6 = vec_n<double, 6>;
+using dmat66 = matrix_nn<double, 6>;
