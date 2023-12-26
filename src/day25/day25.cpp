@@ -56,12 +56,17 @@ size_t part1(graph_t graph)
     auto weights = boost::get(boost::edge_weight, graph);
     boost::stoer_wagner_min_cut(graph, weights, boost::parity_map(parity));
 
+    std::vector<std::pair<size_t,size_t>> edges_to_cut;
     for(auto& ed : boost::make_iterator_range(boost::edges(graph))) {
         auto src = boost::source(ed, graph);
         auto dst = boost::target(ed, graph);
         if (boost::get(parity, src) != boost::get(parity, dst)){
-            boost::remove_edge(src, dst, graph);
+            edges_to_cut.push_back({src, dst});
         }
+    }
+
+    for(auto& edge : edges_to_cut){
+        boost::remove_edge(edge.first, edge.second, graph);
     }
 
     std::vector<int> component(boost::num_vertices(graph));
