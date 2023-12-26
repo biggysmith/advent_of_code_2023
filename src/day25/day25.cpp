@@ -10,15 +10,7 @@
 #include <boost/graph/connected_components.hpp>
 #include <boost/graph/stoer_wagner_min_cut.hpp>
 
-typedef boost::property<boost::edge_weight_t, size_t> edge_weight_t;
-typedef boost::adjacency_list<
-    boost::vecS,
-    boost::vecS,
-    boost::undirectedS,
-    boost::no_property,
-    edge_weight_t,
-    boost::no_property
-> graph_t;
+typedef boost::adjacency_list<boost::vecS, boost::vecS, boost::undirectedS> graph_t;
 
 std::vector<std::string> parse(const std::string& line, std::regex& reg) {
    return std::vector<std::string>(std::sregex_token_iterator(line.begin(), line.end(), reg), std::sregex_token_iterator());
@@ -41,7 +33,7 @@ graph_t load_input(const std::string& file){
             if(!name_map.count(strs[i])){
                 name_map[strs[i]] = n++;
             }
-            boost::add_edge(name_map[strs[0]], name_map[strs[i]], edge_weight_t(1), ret);
+            boost::add_edge(name_map[strs[0]], name_map[strs[i]], ret);
         }
     }
 
@@ -53,7 +45,8 @@ size_t part1(graph_t graph)
     // parity_map stores parity value for each vertex. vertices with different parity will be on different side of min cut 
     auto parity = boost::make_one_bit_color_map(boost::num_vertices(graph), boost::get(boost::vertex_index, graph));
 
-    auto weights = boost::get(boost::edge_weight, graph);
+    //auto weights = boost::get(boost::edge_weight, graph);
+    auto weights = boost::make_constant_property<graph_t::edge_descriptor>(1.0);
     boost::stoer_wagner_min_cut(graph, weights, boost::parity_map(parity));
 
     std::vector<std::pair<size_t,size_t>> edges_to_cut;
