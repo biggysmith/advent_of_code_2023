@@ -45,7 +45,6 @@ size_t part1(graph_t graph)
     // parity_map stores parity value for each vertex. vertices with different parity will be on different side of min cut 
     auto parity = boost::make_one_bit_color_map(boost::num_vertices(graph), boost::get(boost::vertex_index, graph));
 
-    //auto weights = boost::get(boost::edge_weight, graph);
     auto weights = boost::make_constant_property<graph_t::edge_descriptor>(1.0);
     boost::stoer_wagner_min_cut(graph, weights, boost::parity_map(parity));
 
